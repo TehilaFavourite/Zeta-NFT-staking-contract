@@ -5,10 +5,10 @@ pragma solidity 0.8.7;
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/access/ownable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./events.sol";
 
-contract Staking is ERC721Holder, events {
+contract NFTStaking is ERC721Holder, Ownable, events {
     IERC721 public StakeNFT;
     IERC20 public rewardsToken;
     uint256 public totalStaked;
@@ -46,7 +46,7 @@ contract Staking is ERC721Holder, events {
                     ownAny = true;
                 }
                 // emmit stake event
-                emit Stake(_msgSender(), _tokenIds[i], block.timestamp);
+                emit Staked(_msgSender(), _tokenIds[i], block.timestamp);
             }           
             unchecked {
                 i++;

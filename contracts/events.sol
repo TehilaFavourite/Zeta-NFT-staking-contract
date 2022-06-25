@@ -7,4 +7,9 @@ pragma solidity 0.8.7;
 *
 * Note that `value` may be zero.
 */
-event Staked(address indexed user, uint256 tokenID, uint256 timeStake)
+
+interface events {
+
+    event Staked(address indexed user, uint256 tokenID, uint256 timeStake);
+
+}
