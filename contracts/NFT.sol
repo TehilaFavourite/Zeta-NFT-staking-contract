@@ -9,6 +9,7 @@ contract NFT is ERC721 {
         ERC721(_name, _symbol)
     {}
 
+    // note anyone can mint, this is just for test purposes
     function mint(uint256 tokenId) external {
         _safeMint(msg.sender, tokenId);
     }

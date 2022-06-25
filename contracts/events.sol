@@ -12,4 +12,16 @@ interface events {
 
     event Staked(address indexed user, uint256 tokenID, uint256 timeStake);
 
+    event UnStaked(address indexed user, uint256 tokenID, uint256 timeStake);
+
+    event UpdateAsset(
+        address indexed asset, 
+        uint256 rewardForOne, 
+        uint256 thirtydaysRewards,
+        uint256 sixtydaysRewards,
+        uint256 yearlyRewards
+    );
+
+    event Liquidate(address indexed asset, uint256 liquidationTime);
+
 }
