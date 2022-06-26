@@ -46,11 +46,11 @@ contract NFTStaking is ERC721Holder, Ownable, events {
      * - The `_assetPID` is the assest (NFT address) associated to that indexed.
      * - The `_tokenIds` arrays of tokenID that user own on the (NFT address) to be staked.
      *
-     * Emits an {Staked} event.
+     * Emits a {Stake} event.
      */
     function stake(uint256 _assetPID, uint256[] memory _tokenIds) external {
         <!-- address isOwner ensures that user is the owner of the tokenID
-        If user is the owner, the NFT is transferred from the user to the smart contract for staking
+        If user is the owner, the NFT is transferred from the user to the smart contract for staking.
         User can stake multiple NFT at once.
 
         *getAsset* stores the asset information. 
@@ -62,32 +62,32 @@ contract NFTStaking is ERC721Holder, Ownable, events {
     }
 
     /**
-     * @dev unstake `_tokenIds` the `msg.sender` must have satked first
-     * it advice to always withdraw rewards before unstaking if any.
+     * @dev unstake `_tokenIds` the `msg.sender` must have staked first
+     * it's advisable to always withdraw rewards before unstaking if any.
      * Enables users to unstake staked NFT collections from the pool
      *
-     * IMPORTANT: Beware that liquidation must not occure before unsstaking if not an error will be triggered.
+     * IMPORTANT: Beware that liquidation must not occur before unstaking if not an error will be triggered.
      * the caller (msg.sender) must have staked `tokenIds` on the pool.
      * 
      * - The `_assetPID` is the assest (NFT address) associated to that indexed.
      * - The `_tokenIds` the staked tokenID that user own on the pool.
      *
-     * Emits an {UnStaked} event.
+     * Emits an {UnStake} event.
      */
     function unstake(uint256 _assetPID, uint256 _tokenID) external {
         <!-- Recieved the asset PID and the _tokenID check if asset has been liquidated first,
         get the length of token that the user staked and loop thorugh to check if user staked
-        the token id he wants to withdraw if user own it `iOwnedTheTokenID` will be set to true
-        otherwise set to false which shows user doesnt own the tokenID or does not stake the tokenID,
-        if own it pop the length of user collection and update it state, 
-        then initiate a transfer to the user -->
+        the token id he wants to withdraw. If user own it, `iOwnedTheTokenID` will be set to true
+        otherwise set to false which shows user does not own the tokenID or did not stake the tokenID,
+        if owned, it pops the length of user collection and update its state, 
+        then initiates a transfer to the user -->
     }
 
     /**
      * @dev withdrawReward `amount` the `msg.sender`
      * Enables users to withdraw rewards.
      *
-     * IMPORTANT: Beware that for security user must stake before calling this function at least one.
+     * IMPORTANT: Beware that for security, user must stake before calling this function at least once.
      * 
      * - The `_assetPID` is the assest (NFT address) associated to that indexed.
      * - The `amount` amount to withdraw from the pool must be less than or equal to total reward.
@@ -97,9 +97,9 @@ contract NFTStaking is ERC721Holder, Ownable, events {
     function withdrawReward(uint256 _assetPID, uint256 amount) public {
         <!-- 
          Use the _assetPID to get user information from storage,
-         check to see if user staked any token if not throw an error,
+         checks to see if user staked any token if not, it throws an error,
          calculate user current rewards,
-         check to see if input amount is greater that reward generated if not trow an error,
+         if input amount is greater that reward generated, it throws an error,
          initiate a transfer of amount to user.
         -->
     }
@@ -131,7 +131,7 @@ contract NFTStaking is ERC721Holder, Ownable, events {
     /**
      * @dev Returns the true if an asset has been liquidated.
      * 
-     * - The `_asset` is the assest (NFT address) liquidated ?.
+     * - The `_asset` is this assest (NFT address) liquidated ?.
      *
      */
     function isAssetLiquidated(address _asset) external view returns (bool);
