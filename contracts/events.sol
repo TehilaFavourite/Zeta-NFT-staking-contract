@@ -24,4 +24,6 @@ interface events {
 
     event Liquidate(address indexed asset, uint256 liquidationTime);
 
+    event WithdrawReward(address indexed user, uint256 assetID, uint256 time);
+
 }

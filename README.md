@@ -6,56 +6,162 @@ The NFT addresses required to be staked is set by the owner.
 
 # Functions in the staking contract and their use case
 
-# BatchUpdateAsset()
-**input**
-_assets (uint256[]) *This holds the Ids of all the NFT Addresses pushed in the array*
-forOneYouStakeTheRewardIs (uint256[]) *This is the reward for one NFT user stakes*
-_thirtyDays (uint256[]) *This is the reward user gets for staking for 30 days*
-_sixtyDays (uint256[]) *This is the reward user gets for staking for 60 days*
-_yearly (uint256[]) *This is the reward user gets for staking for a year*
+```solidity
+pragma solidity 0.8.7;
 
-**Essence**
-Enables the owner to set the NFT addresses required to be staked
+contract NFTStaking is ERC721Holder, Ownable, events {
 
-**caller**
-owner
+    /**
+     * @dev Enables the owner to set the NFT addresses required to be staked
+     * withdraw the `tokenIds`
+     * Enables users to stake different NFT collections
+     *
+     * IMPORTANT: require The length of arrays in the arguments in BatchUpdateAsset() must be thesame else
+     * it will throw an error.
+     * 
+     * - arrays `_assets`, This holds the Ids of all the NFT Addresses pushed in the array
+     * - arrays `forOneYouStakeTheRewardIs`, This is the reward for one NFT user stakes
+     * - arrays `_thirtyDays`, This is the reward user gets for staking for 30 days
+     * - arrays `_sixtyDays`,  This is the reward user gets for staking for 60 days
+     * - arrays `_yearly`    This is the reward user gets for staking for a year
+     *
+     * Emits an {Staked} event.
+     */
+    function BatchUpdateAsset(
+        address[] memory _assets,
+        uint256[] memory forOneYouStakeTheRewardIs,
+        uint256[] memory _thirtyDays,
+        uint256[] memory _sixtyDays,
+        uint256[] memory _yearly 
+    ) external;
 
-The length of arrays in the arguments in BatchUpdateAsset() must be thesame else, it will throw an error
+    /**
+     * @dev stake arrays of `_tokenIds` the `msg.sender` must have set `setApproval()` for the contract to
+     * withdraw the `tokenIds`
+     * Enables users to stake different NFT collections
+     *
+     * IMPORTANT: Beware that allowance must not be false for `_tokenIds`.
+     * the caller (msg.sender) must be the owner of the `tokenIds`.
+     * 
+     * - The `_assetPID` is the assest (NFT address) associated to that indexed.
+     * - The `_tokenIds` arrays of tokenID that user own on the (NFT address) to be staked.
+     *
+     * Emits an {Staked} event.
+     */
+    function stake(uint256 _assetPID, uint256[] memory _tokenIds) external {
+        <!-- address isOwner ensures that user is the owner of the tokenID
+        If user is the owner, the NFT is transferred from the user to the smart contract for staking
+        User can stake multiple NFT at once.
 
-# stake()
-**input**
-_assetPID (uint256) *This is the pool ID user wants to stake from*
-_tokenIds (uint256[]) *This is the token ID user wants to stake*
+        *getAsset* stores the asset information. 
+        *userStake* store/track userInfo
+        The bool *ownAny* tracks how to store user information. If there is a successful transfer, it will store the user information as staked.
+        The loop checks through the tokenID length to know if user is the owner of the NFT.
+        The mapping in the struct helps to track user's NFT location.
+        totalStake get the total NFTs users have staked. -->
+    }
 
-**Essence**
-Enables user to stake different NFT collections
+    /**
+     * @dev unstake `_tokenIds` the `msg.sender` must have satked first
+     * it advice to always withdraw rewards before unstaking if any.
+     * Enables users to unstake staked NFT collections from the pool
+     *
+     * IMPORTANT: Beware that liquidation must not occure before unsstaking if not an error will be triggered.
+     * the caller (msg.sender) must have staked `tokenIds` on the pool.
+     * 
+     * - The `_assetPID` is the assest (NFT address) associated to that indexed.
+     * - The `_tokenIds` the staked tokenID that user own on the pool.
+     *
+     * Emits an {UnStaked} event.
+     */
+    function unstake(uint256 _assetPID, uint256 _tokenID) external {
+        <!-- Recieved the asset PID and the _tokenID check if asset has been liquidated first,
+        get the length of token that the user staked and loop thorugh to check if user staked
+        the token id he wants to withdraw if user own it `iOwnedTheTokenID` will be set to true
+        otherwise set to false which shows user doesnt own the tokenID or does not stake the tokenID,
+        if own it pop the length of user collection and update it state, 
+        then initiate a transfer to the user -->
+    }
 
-**caller**
-user
+    /**
+     * @dev withdrawReward `amount` the `msg.sender`
+     * Enables users to withdraw rewards.
+     *
+     * IMPORTANT: Beware that for security user must stake before calling this function at least one.
+     * 
+     * - The `_assetPID` is the assest (NFT address) associated to that indexed.
+     * - The `amount` amount to withdraw from the pool must be less than or equal to total reward.
+     *
+     * Emits an {WithdrawReward} event.
+     */
+    function withdrawReward(uint256 _assetPID, uint256 amount) public {
+        <!-- 
+         Use the _assetPID to get user information from storage,
+         check to see if user staked any token if not throw an error,
+         calculate user current rewards,
+         check to see if input amount is greater that reward generated if not trow an error,
+         initiate a transfer of amount to user.
+        -->
+    }
 
-*address isOwner* ensures that user is the owner of the tokenID
-If user is the owner, the NFT is transferred from the user to the smart contract for staking
-User can stake multiple NFT at once.
+    /**
+     * @dev calculatReward view functions
+     * Enables users to check their rewards.
+     * 
+     * - The `_assetPID` is the assest (NFT address) associated to that indexed.
+     * - The `_user` address of the users to check reward.
+     *
+     */
+    function calculatReward(uint256 _assetPID, address _user) public view returns(uint256 rewards) {
+        <!-- calculate user rewards based on timing -->
+    }
 
-*getAsset* stores the asset information. 
-*userStake* store/track userInfo
-The bool *ownAny* tracks how to store user information. If there is a successful transfer, it will store the user information as staked.
-The loop checks through the tokenID length to know if user is the owner of the NFT.
-The mapping in the struct helps to track user's NFT location.
-totalStake get the total NFTs users have staked.
-When user stake an NFT, an event is emitted.
+    /**
+     * @dev get information related to a user in each asset. view functions
+     * 
+     * - The `_assetPID` is the assest (NFT address) associated to that indexed.
+     * - The `_user` address of the users to check reward.
+     *
+     */
+    function getUserInfo(uint256 _assetPID, address _user) external view returns {
+        <!-- user infor in each pool 
+         return the struct called `Stake`-->
+    }
 
+    /**
+     * @dev Returns the true if an asset has been liquidated.
+     * 
+     * - The `_asset` is the assest (NFT address) liquidated ?.
+     *
+     */
+    function isAssetLiquidated(address _asset) external view returns (bool);
 
-# unstake()
-**input**
-_assetPID (uint256) *This is the pool ID user wants to unstake from*
-_tokenIds (uint256) *This is the token ID user wants to unstake*
+    /**
+     * @dev get information related to a a pool. view functions
+     * 
+     * - The `_assetPID` is the assest (NFT address) associated to that indexed set by owner.
+     *
+     */
+    function getAssetData(uint256 _assetPID) external view returns(RewardsByAssets memory data) {
+        <!-- user infor of each pool 
+         return the struct called `RewardsByAssets`-->
+    }
 
-**Essence**
-Enables user to unstake different NFT
+    /**
+     * @dev safe withdrawaL mechanism to witdraw token (ERC20) can only be called by owner
+     */
+    function safeWithdrawalToken(address _token, address _to, uint256 _amount) external;
 
-**caller**
-user
+    /**
+     * @dev safe withdrawaL mechanism to witdraw token (ERC721) can only be called by owner
+     */
+    function safeWithdrawalNFT(address _token, address _to, uint256 _tokenId) external;
 
-user can only unstake one NFT at a time.
-*getAsset* stores the asset information.
+    /**
+     * @dev safe withdrawaL mechanism to witdrawal for Batch token (ERC721) can only be called by owner
+     * not gas efficient.
+     */
+    function BatchSafeWithdrawalNFT(address _token, address _to, uint256[] memory _tokenIds) external
+}
+
+```

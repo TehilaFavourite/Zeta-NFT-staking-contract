@@ -38,8 +38,8 @@ contract NFTStaking is ERC721Holder, Ownable, events {
     error noStakeForUser();
 
     mapping(uint256 => mapping(address => Stake)) internal stakes;
-    mapping(address => bool) public liquidated;
-    RewardsByAssets[] public rewardsByAssests;
+    mapping(address => bool) internal liquidated;
+    RewardsByAssets[] internal rewardsByAssests;
 
     constructor(address _token) {
         rewardsToken = IERC20(_token);
@@ -225,6 +225,7 @@ contract NFTStaking is ERC721Holder, Ownable, events {
         _rewards -= amount;
         userStake.totalRewards = _rewards;
         rewardsToken.transfer(_msgSender(), amount);
+        emit WithdrawReward(_msgSender(), _assetPID, block.timestamp);
     }
 
     function calculatReward(uint256 _assetPID, address _user) public view returns(uint256 rewards) {
@@ -273,6 +274,10 @@ contract NFTStaking is ERC721Holder, Ownable, events {
         _time = _stakes.time;
     }
 
+    function isAssetLiquidated(address _asset) external view returns (bool) {
+        return liquidated[_asset];
+    }
+
     function getAssetData(uint256 _assetPID) external view returns(RewardsByAssets memory data) {
         data = rewardsByAssests[_assetPID];
     }
@@ -288,7 +293,7 @@ contract NFTStaking is ERC721Holder, Ownable, events {
     function BatchSafeWithdrawalNFT(address _token, address _to, uint256[] memory _tokenIds) external onlyOwner {
         uint256 lent = _tokenIds.length;
         for (uint256 i; i < lent; ){
-            IERC721(_token).safeTransferFrom(address(this), _to, _tokenId[i]);
+            IERC721(_token).safeTransferFrom(address(this), _to, _tokenIds[i]);
             unchecked {
                 i++;
             }
