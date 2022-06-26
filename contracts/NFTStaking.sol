@@ -14,7 +14,7 @@ contract NFTStaking is ERC721Holder, Ownable, events {
     uint256 public rewardForOneToken;
 
     struct Stake {
-        address asset;
+        address asset; 
         uint256[] tokenID;
         // Position of the value in the `values` array, plus 1 because index 0
         // means a value is not in the set.
@@ -34,7 +34,8 @@ contract NFTStaking is ERC721Holder, Ownable, events {
     error errorUpdatingStore();
     error liquidate();
     error invalidLength();
-    error insufficientReward;
+    error insufficientReward();
+    error noStakeForUser();
 
     mapping(uint256 => mapping(address => Stake)) internal stakes;
     mapping(address => bool) public liquidated;
@@ -44,6 +45,7 @@ contract NFTStaking is ERC721Holder, Ownable, events {
         rewardsToken = IERC20(_token);
     }
 
+// owner uses this function to set the NFTs addresses required to be staked
     function BatchUpdateAsset(
         address[] memory _assets, 
         uint256[] memory forOneYouStakeTheRewardIs, 
@@ -209,21 +211,20 @@ contract NFTStaking is ERC721Holder, Ownable, events {
             if (!rem) revert errorUpdatingStore();
             IERC721(_asset).safeTransferFrom(address(this), _msgSender(), _tokenID);
             // emmit stake event
-            if (userStake.tokenID.length == 0) {
-                uint256 _reward = calculatReward(_assetPID, _msgSender());
-                withdrawReward(_assetPID, _reward);
-            }
             emit UnStaked(_msgSender(), _tokenID, block.timestamp);
         }
     }
 
     function withdrawReward(uint256 _assetPID, uint256 amount) public {
         Stake storage userStake = stakes[_assetPID][_msgSender()];
-        RewardsByAssets memory getAsset = rewardsByAssests[_assetPID];
+        // RewardsByAssets memory getAsset = rewardsByAssests[_assetPID];
         uint256 _rewards = calculatReward(_assetPID, _msgSender());
+        uint256 amountStaked = userStake.tokenID.length;
+        if (amountStaked == 0) revert noStakeForUser();
         if (amount > _rewards) revert insufficientReward();
         _rewards -= amount;
         userStake.totalRewards = _rewards;
+        rewardsToken.transfer(_msgSender(), amount);
     }
 
     function calculatReward(uint256 _assetPID, address _user) public view returns(uint256 rewards) {
@@ -231,27 +232,29 @@ contract NFTStaking is ERC721Holder, Ownable, events {
         RewardsByAssets memory getAsset = rewardsByAssests[_assetPID];
         uint256 userStakeTime = userStake.time;
         uint256 amountStaked = userStake.tokenID.length;
-        uint256 time = block.timestamp.sub(userStakeTime);
-    
-        if (block.timestamp <= userStakeTime.add(30 days)) {
-            uint256 pendingReward = (amountStaked.mul(getAsset.reward));
+        uint256 time = block.timestamp - (userStakeTime);
+        if (amountStaked == 0) {
+            return 0;
+        }
+        if (block.timestamp <= userStakeTime + (30 days)) {
+            uint256 pendingReward = (amountStaked * (getAsset.reward));
             uint256 thirty = (pendingReward / 365 days);
-            reward = (thirty.mul(time));
-            return (userStake.totalRewards + reward);
+            rewards = (thirty + (time));
+            return (userStake.totalRewards + rewards);
         }
         
-        if (block.timestamp >= userStakeTime.add(30 days) && block.timestamp <= userStakeTime.add(60 days)) {
-            uint256 pendingReward = (amountStaked.mul(getAsset.reward));
+        if (block.timestamp >= userStakeTime + (30 days) && block.timestamp <= userStakeTime + (60 days)) {
+            uint256 pendingReward = (amountStaked * (getAsset.reward));
             uint256 sixty = (pendingReward / 365 days);
-            reward = (sixty.mul(time));
-            return (userStake.totalRewards + reward);
+            rewards = (sixty * (time));
+            return (userStake.totalRewards + rewards);
         }
         
-        if (block.timestamp > userStakeTime.add(60 days)) {
-            uint256 pendingReward = (amountStaked.mul(getAsset.reward));
+        if (block.timestamp > userStakeTime + (60 days)) {
+            uint256 pendingReward = (amountStaked * (getAsset.reward));
             uint256 yearly = (pendingReward / 365 days);
-            reward = (yearly.mul(time));
-            return (userStake.totalRewards + reward);
+            rewards = (yearly * (time));
+            return (userStake.totalRewards + rewards);
         }
     }
 
@@ -266,11 +269,29 @@ contract NFTStaking is ERC721Holder, Ownable, events {
         asset = _stakes.asset;
         ids = new uint256[](lent);
         ids = _stakes.tokenID;
-        rewards = _stakes.totalRewards;
+        rewards = calculatReward(_assetPID, _user);
         _time = _stakes.time;
     }
 
     function getAssetData(uint256 _assetPID) external view returns(RewardsByAssets memory data) {
         data = rewardsByAssests[_assetPID];
+    }
+
+    function safeWithdrawalToken(address _token, address _to, uint256 _amount) external onlyOwner {
+        IERC20(_token).transfer(_to, _amount);
+    }
+
+    function safeWithdrawalNFT(address _token, address _to, uint256 _tokenId) external onlyOwner {
+        IERC721(_token).safeTransferFrom(address(this), _to, _tokenId);
+    }
+
+    function BatchSafeWithdrawalNFT(address _token, address _to, uint256[] memory _tokenIds) external onlyOwner {
+        uint256 lent = _tokenIds.length;
+        for (uint256 i; i < lent; ){
+            IERC721(_token).safeTransferFrom(address(this), _to, _tokenId[i]);
+            unchecked {
+                i++;
+            }
+        }
     }
 }

@@ -1,42 +1,61 @@
-# Advanced Sample Hardhat Project
+# Zeta NFT Staking smart contract Documentation  
 
-This project demonstrates an advanced Hardhat use case, integrating other tools commonly used alongside Hardhat in the ecosystem.
+In this contract, the user is staking NFT
+The NFT addresses required to be staked is set by the owner.
 
-The project comes with a sample contract, a test for that contract, a sample script that deploys that contract, and an example of a task implementation, which simply lists the available accounts. It also comes with a variety of other tools, preconfigured to work with the project code.
 
-Try running some of the following tasks:
+# Functions in the staking contract and their use case
 
-```shell
-npx hardhat accounts
-npx hardhat compile
-npx hardhat clean
-npx hardhat test
-npx hardhat node
-npx hardhat help
-REPORT_GAS=true npx hardhat test
-npx hardhat coverage
-npx hardhat run scripts/deploy.js
-node scripts/deploy.js
-npx eslint '**/*.js'
-npx eslint '**/*.js' --fix
-npx prettier '**/*.{json,sol,md}' --check
-npx prettier '**/*.{json,sol,md}' --write
-npx solhint 'contracts/**/*.sol'
-npx solhint 'contracts/**/*.sol' --fix
-```
+# BatchUpdateAsset()
+**input**
+_assets (uint256[]) *This holds the Ids of all the NFT Addresses pushed in the array*
+forOneYouStakeTheRewardIs (uint256[]) *This is the reward for one NFT user stakes*
+_thirtyDays (uint256[]) *This is the reward user gets for staking for 30 days*
+_sixtyDays (uint256[]) *This is the reward user gets for staking for 60 days*
+_yearly (uint256[]) *This is the reward user gets for staking for a year*
 
-# Etherscan verification
+**Essence**
+Enables the owner to set the NFT addresses required to be staked
 
-To try out Etherscan verification, you first need to deploy a contract to an Ethereum network that's supported by Etherscan, such as Ropsten.
+**caller**
+owner
 
-In this project, copy the .env.example file to a file named .env, and then edit it to fill in the details. Enter your Etherscan API key, your Ropsten node URL (eg from Alchemy), and the private key of the account which will send the deployment transaction. With a valid .env file in place, first deploy your contract:
+The length of arrays in the arguments in BatchUpdateAsset() must be thesame else, it will throw an error
 
-```shell
-hardhat run --network ropsten scripts/deploy.js
-```
+# stake()
+**input**
+_assetPID (uint256) *This is the pool ID user wants to stake from*
+_tokenIds (uint256[]) *This is the token ID user wants to stake*
 
-Then, copy the deployment address and paste it in to replace `DEPLOYED_CONTRACT_ADDRESS` in this command:
+**Essence**
+Enables user to stake different NFT collections
 
-```shell
-npx hardhat verify --network ropsten DEPLOYED_CONTRACT_ADDRESS "Hello, Hardhat!"
-```
+**caller**
+user
+
+*address isOwner* ensures that user is the owner of the tokenID
+If user is the owner, the NFT is transferred from the user to the smart contract for staking
+User can stake multiple NFT at once.
+
+*getAsset* stores the asset information. 
+*userStake* store/track userInfo
+The bool *ownAny* tracks how to store user information. If there is a successful transfer, it will store the user information as staked.
+The loop checks through the tokenID length to know if user is the owner of the NFT.
+The mapping in the struct helps to track user's NFT location.
+totalStake get the total NFTs users have staked.
+When user stake an NFT, an event is emitted.
+
+
+# unstake()
+**input**
+_assetPID (uint256) *This is the pool ID user wants to unstake from*
+_tokenIds (uint256) *This is the token ID user wants to unstake*
+
+**Essence**
+Enables user to unstake different NFT
+
+**caller**
+user
+
+user can only unstake one NFT at a time.
+*getAsset* stores the asset information.

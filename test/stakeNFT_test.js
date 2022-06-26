@@ -32,6 +32,9 @@ describe("Stake NFT Contract Test", function () {
             [sixty],
             [yearly]
         );
+
+        const amountTransferred = ethers.utils.parseEther("100");
+        await rewardToken.transfer(stakeContract.address, amountTransferred)
     });
 
     // verify all inputs data are correct
@@ -181,18 +184,11 @@ describe("Stake NFT Contract Test", function () {
         const userStaked = await stakeContract.getUserInfo(0, owner.address);
         expect(userStaked.ids.toString()).to.equal("1,2");
         expect(stakeNFTContractBalance.toString()).to.equal("2");
-        expect(ownerNFTBalance.toString()).to.equal("0");
-
-        await stakeContract.connect(owner).liquidateAsset(nftContract.address, true);        
-        await expect(stakeContract.connect(owner).unstake(0, arg[0])).to.be.revertedWith(
-            'liquidate'
-        );
-
-        const userUnStaked = await stakeContract.getUserInfo(0, owner.address);
-        const stakeNFTContractBalanceAfterUnstake = await nftContract.balanceOf(stakeContract.address)
-        const ownerNFTBalanceAfterUnstake = await nftContract.balanceOf(owner.address)
-        expect(stakeNFTContractBalanceAfterUnstake.toString()).to.equal("2");
-        expect(ownerNFTBalanceAfterUnstake.toString()).to.equal("0");
+        expect(ownerNFTBalance.toString()).to.equal("0"); 
+        // 190258751902 // 95129375951 // 190258751902
+        await stakeContract.connect(owner).withdrawReward(0, "95129375951")
+        const getUserRewards = await stakeContract.calculatReward(0, owner.address)
+        console.log("user rewards: ", getUserRewards.toString())
     });
 
 });

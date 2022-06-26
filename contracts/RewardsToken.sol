@@ -11,4 +11,7 @@ contract RewardsToken is ERC20 {
         // total supply minted to owner
         _mint(msg.sender, 10000000 * (10**18));
     }
+    
 }
+
+
